@@ -1,0 +1,21 @@
+{
+	"name" : "markconde/onemap",
+	"description" : "Wrapper for onemap.sg Rest API",
+	"license" : "MIT",
+	"keywords" : ["onemap.sg"],
+	"authors" : [
+		{
+			"name" : "Mark Conde",
+			"email" : "markkristofferconde@gmail.com"
+		}
+	],
+	"require" : {},
+	"require-dev" : {
+		"phpunit/phpunit" : "4.0.*"
+	},
+	"autoload": {
+		"psr-4" : {
+			"MarkConde\\Onemap\\": "src"
+		}
+	}
+}
