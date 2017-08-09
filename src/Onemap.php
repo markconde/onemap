@@ -7,7 +7,7 @@ class Onemap {
 	const BASE_URL = "https://developers.onemap.sg";
 	const REST_ENDPOINT = "/commonapi/search";
 
-	public $fs_cache;
+	protected $fs_cache;
 
 	public function __construct( $cached = true ) {
 
