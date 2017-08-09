@@ -5,12 +5,20 @@ use Stash;
 
 class Onemap {
 	const BASE_URL = "https://developers.onemap.sg";
-	const REST_ENDPOINT = "/commonapi/search";
+	const REST_EP_SEARCH = "/commonapi/search";
+	const REST_EP_CONVERT = "/commonapi/convert/";
+	const CONVERT_4326_TO_3857 = "4326to3857";
+	const CONVERT_4326_TO_3414 = "4326to3414";
+	const CONVERT_3414_TO_3857 = "3414to3857";
+	const CONVERT_3414_TO_4326 = "3414to4326";
+	const CONVERT_3857_TO_3414 = "3857to3414";
+	const CONVERT_3857_TO_4326 = "3857to4326";
 
 	protected $fs_cache;
 	protected $fs_sec_expires;
 
-	public function __construct( $cached = true, $cache_expiration = 604800 ) {
+	public function __construct( $cached = true, $cache_expiration = 604800 ) 
+	{
 
 		if( $cached ){
 			$driver = new Stash\Driver\FileSystem(array());
@@ -20,7 +28,8 @@ class Onemap {
 
 	}
 
-	public function getAddress( $search_val, $return_geom = 'Y', $get_addr_details = 'Y', $page_num = 1 ) {
+	public function search( $search_val, $return_geom = 'Y', $get_addr_details = 'Y', $page_num = 1 ) 
+	{
 
 		if(!$response = $this->getFromCache($search_val)){
 
@@ -31,7 +40,7 @@ class Onemap {
 				'pageNum' => $page_num
 			);
 
-			$response = $this->doRequest( $parameters );
+			$response = $this->doRequest( self::REST_EP_SEARCH, $parameters );
 			$this->saveToCache($search_val, $response);
 
 			$result_obj = json_decode($response);
@@ -47,11 +56,34 @@ class Onemap {
 
 	}
 
-	protected function doRequest( $parameters = array() ) {
+	public function convert( $X, $Y, $format = self::CONVERT_4326_TO_3857 )
+	{
+		if($format == self::CONVERT_4326_TO_3857 || $format == self::CONVERT_4326_TO_3414) {
+			$parameters = array(
+				'latitude' => $X,
+				'longitude' => $Y,
+			);
+		}
+		else{
+			$parameters = array(
+				'X' => $X,
+				'Y' => $Y,
+			);
+		}
+
+		$endpoint = self::REST_EP_CONVERT.$format;
+
+		$response = $this->doRequest( $endpoint, $parameters );
+
+		return json_decode($response);
+	}
+
+	protected function doRequest( $endpoint, $parameters = array() ) 
+	{
 
 		if( !count($parameters) ) return false;
 
-		$request = self::BASE_URL . self::REST_ENDPOINT . "?" .http_build_query($parameters);
+		$request = self::BASE_URL . $endpoint . "?" .http_build_query($parameters);
 		$response = file_get_contents( $request );
 
 		return $response;
