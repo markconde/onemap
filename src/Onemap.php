@@ -4,15 +4,21 @@ namespace MarkConde\Onemap;
 use Stash;
 
 class Onemap {
-	const BASE_URL = "https://developers.onemap.sg";
-	const REST_EP_SEARCH = "/commonapi/search";
-	const REST_EP_CONVERT = "/commonapi/convert/";
-	const CONVERT_4326_TO_3857 = "4326to3857";
-	const CONVERT_4326_TO_3414 = "4326to3414";
-	const CONVERT_3414_TO_3857 = "3414to3857";
-	const CONVERT_3414_TO_4326 = "3414to4326";
-	const CONVERT_3857_TO_3414 = "3857to3414";
-	const CONVERT_3857_TO_4326 = "3857to4326";
+	const BASE_URL = 'https://developers.onemap.sg';
+	const REST_EP_SEARCH = '/commonapi/search';
+	const REST_EP_CONVERT = '/commonapi/convert/';
+	const REST_EP_GET_STATIC_IMAGE = '/commonapi/staticmap/getStaticImage';
+	const CONVERT_4326_TO_3857 = '4326to3857';
+	const CONVERT_4326_TO_3414 = '4326to3414';
+	const CONVERT_3414_TO_3857 = '3414to3857';
+	const CONVERT_3414_TO_4326 = '3414to4326';
+	const CONVERT_3857_TO_3414 = '3857to3414';
+	const CONVERT_3857_TO_4326 = '3857to4326';
+	const MAP_NIGHT = 'night';
+	const MAP_GREY = 'grey';
+	const MAP_ORIGINAL = 'original';
+	const MAP_DEFAULT = 'default';
+	const MAP_LANDLOT = 'landlot';
 
 	protected $fs_cache;
 	protected $fs_sec_expires;
@@ -78,13 +84,56 @@ class Onemap {
 		return json_decode($response);
 	}
 
+	public function getStaticImage( $layer_chosen = self::MAP_DEFAULT, $latitude = false, $longitude = false, $postal = false, $zoom = 11, $width = 300, $height = 300, $filename = "image.png", $polygons = false, $lines = false, $points = false, $color = false, $fill_color = false){
+
+		$parameters = array(
+			'layerchosen' => $layer_chosen,
+			'zoom' => $zoom,
+			'width' => $width,
+			'height' => $height
+			);
+
+		if ( $latitude != false && $longitude != false ) {
+			$parameters['lat'] = $latitude;
+			$parameters['lng'] = $longitude;
+		}
+		elseif( $postal != false ) {
+			$parameters['postal'] = $postal;
+		}
+		else{
+			return false;
+		}
+
+		if($polygons != false) $parameters['polygons'] = $polygons;
+		if($lines != false) $parameters['lines'] = $lines;
+		if($points != false) $parameters['color'] = $color;
+		if($fill_color != false) $parameters['fillColor'] = $fill_color;
+
+		$response = $this->doRequestFile( self::REST_EP_GET_STATIC_IMAGE, $parameters, $filename );
+	}
+
 	protected function doRequest( $endpoint, $parameters = array() ) 
 	{
 
 		if( !count($parameters) ) return false;
 
-		$request = self::BASE_URL . $endpoint . "?" .http_build_query($parameters);
+		$request = self::BASE_URL . $endpoint . '?' .http_build_query($parameters);
 		$response = file_get_contents( $request );
+
+		return $response;
+	}
+
+	protected function doRequestFile( $endpoint, $parameters = array(), $filename="image.png" )
+	{
+		if( !count($parameters) ) return false;
+
+		$request = self::BASE_URL . $endpoint . '?' .http_build_query($parameters);
+
+		$ch = curl_init($request);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+	    curl_setopt($ch, CURLOPT_BINARYTRANSFER, true);
+
+		$response = curl_exec($ch);
 
 		return $response;
 	}
